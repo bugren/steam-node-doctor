@@ -148,11 +148,17 @@ def _run_fix_privileged() -> tuple[bool, str]:
     if not pkexec:
         return False, "未找到 pkexec，请在终端执行 sudo steamfix fix"
 
+    # 优先用安装后的启动器；源码运行时退回「显式带 PYTHONPATH 的 pkexec env」
+    exe = shutil.which("steamfix")
+    pkg_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if exe:
+        cmd = [pkexec, exe, "fix"]
+    else:
+        cmd = [pkexec, "env", f"PYTHONPATH={pkg_root}",
+               sys.executable, "-m", "steamfix", "fix"]
+
     try:
-        p = subprocess.run(
-            [pkexec, sys.executable, "-m", "steamfix", "fix"],
-            capture_output=True, text=True, timeout=120,
-        )
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
     except subprocess.SubprocessError as e:
         return False, f"提权失败: {e}"
 

@@ -265,6 +265,7 @@ def apply_fix(store_ip: str | None = None, community_ip: str | None = None) -> d
     if not store_ip:
         raise RuntimeError("没有找到可达的 store 节点，拒绝写入无效 IP")
 
+    before_hijack = len(scan_hosts())
     original = _read_hosts()
     backup = HOSTS_PATH + ".steamfix.bak"
     if not os.path.exists(backup):
@@ -299,7 +300,7 @@ def apply_fix(store_ip: str | None = None, community_ip: str | None = None) -> d
     return {
         "store_ip": store_ip,
         "community_ip": community_ip,
-        "removed_hijack": len(scan_hosts()) * 0,  # 已清理，这里只为兼容字段
+        "removed_hijack": before_hijack,
         "backup": backup,
     }
 
