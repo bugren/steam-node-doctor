@@ -189,6 +189,12 @@ def probe_all(host: str, timeout: float = 6.0) -> list[Probe]:
                 code, secs = fut.result()
             except Exception:
                 code, secs = 0, 0.0
+            if code == 0:  # 抖动重试一次，避免把活的节点误判成死的
+                time.sleep(0.3)
+                try:
+                    code, secs = probe(host, ip, timeout)
+                except Exception:
+                    code, secs = 0, 0.0
             out.append(Probe(ip=ip, code=code, seconds=secs, source=src))
     out.sort(key=lambda p: (not p.ok, p.seconds))
     return out
@@ -218,6 +224,9 @@ def diagnose() -> Diagnosis:
         community_reachable=bool(best_of(comm_probes)),
     )
 
+    ok_ips = {p.ip for p in store_probes if p.ok}
+    pinned_ok = bool(d.pinned_store) and d.pinned_store in ok_ips
+
     if d.hosts_hijack:
         d.verdict = "hosts 被劫持"
         d.hints.append("发现 hosts 里有 Steam 域名指向 127.0.0.1，这是 -102 的典型原因")
@@ -227,12 +236,17 @@ def diagnose() -> Diagnosis:
     elif not d.store_reachable:
         d.verdict = "节点不可达"
         d.hints.append("所有候选节点都被拦截：可能是运营商 IP 段封锁，需要代理")
-    elif d.pinned_store and d.pinned_store != d.best_store:
+    elif pinned_ok:
+        d.verdict = "正常"
+        d.hints.append(f"当前固定的 {d.pinned_store} 可用")
+        if d.best_store and d.best_store != d.pinned_store:
+            d.hints.append(f"另有更快的节点 {d.best_store}（可选优化，不必改）")
+    elif d.pinned_store:
         d.verdict = "节点已失效"
         d.hints.append(f"当前固定的 {d.pinned_store} 已不可用，建议改为 {d.best_store}")
     else:
-        d.verdict = "正常"
-        d.hints.append("商店解析与连通性正常")
+        d.verdict = "未固定节点"
+        d.hints.append(f"没有手动固定 IP，建议固定到 {d.best_store}")
 
     if not d.community_reachable:
         d.hints.append("社区域名整段被封，需要代理；这不影响登录、游戏库和下载")
