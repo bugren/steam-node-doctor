@@ -21,7 +21,7 @@ from dataclasses import dataclass, asdict, field
 
 __version__ = "0.1.0"
 
-HOSTS_PATH = os.environ.get("STEAMFIX_HOSTS", "/etc/hosts")
+HOSTS_PATH = os.environ.get("STEAM_NODE_DOCTOR_HOSTS") or os.environ.get("STEAMFIX_HOSTS") or "/etc/hosts"
 
 STORE = "store.steampowered.com"
 COMMUNITY = "steamcommunity.com"

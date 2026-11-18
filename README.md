@@ -50,7 +50,7 @@ git clone <你的仓库地址> steam-node-doctor
 cd steam-node-doctor
 sudo bash install.sh     # 装到 /usr/local
 # 或者不安装，直接运行：
-python3 -m steam-node-doctor serve --open
+python3 -m steam_node_doctor serve --open
 ```
 
 ## 使用
