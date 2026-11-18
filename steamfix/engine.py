@@ -122,22 +122,25 @@ def system_ips(host: str) -> list[str]:
     return sorted({info[4][0] for info in infos})
 
 
+def _dig_one(host: str, resolver: str) -> list[str]:
+    try:
+        p = subprocess.run(
+            ["dig", "@" + resolver, "+short", "+time=2", "+tries=1", "A", host],
+            capture_output=True, text=True, timeout=3,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return []
+    return [line.strip() for line in p.stdout.splitlines()
+            if re.fullmatch(r"\d+\.\d+\.\d+\.\d+", line.strip())]
+
+
 def dig_ips(host: str, resolvers: list[str] | None = None) -> list[str]:
-    """用 dig 从多个 DNS 拿 IP，做交叉验证。没有 dig 就退化为系统解析。"""
+    """用 dig 从多个 DNS 拿 IP（并发），做交叉验证。没有 dig 就退化为系统解析。"""
     resolvers = resolvers or RESOLVERS
     found: set[str] = set()
-    for r in resolvers:
-        try:
-            p = subprocess.run(
-                ["dig", "@" + r, "+short", "+time=3", "+tries=1", "A", host],
-                capture_output=True, text=True, timeout=5,
-            )
-            for line in p.stdout.splitlines():
-                line = line.strip()
-                if re.fullmatch(r"\d+\.\d+\.\d+\.\d+", line):
-                    found.add(line)
-        except (OSError, subprocess.SubprocessError):
-            continue
+    with ThreadPoolExecutor(max_workers=len(resolvers)) as pool:
+        for ips in pool.map(lambda r: _dig_one(host, r), resolvers):
+            found.update(ips)
     return sorted(found)
 
 
@@ -180,25 +183,40 @@ def probe_all(host: str, timeout: float = 3.0, retries: int = 1,
         cands = cands[:limit]
     if not cands:
         return []
-    with ThreadPoolExecutor(max_workers=max(1, min(workers, len(cands)))) as pool:
-        futures = {
-            pool.submit(probe, host, ip, timeout): (ip, src)
-            for ip, src in cands
-        }
-        out: list[Probe] = []
-        for fut in futures:
-            ip, src = futures[fut]
-            try:
-                code, secs = fut.result()
-            except Exception:
-                code, secs = 0, 0.0
-            if code == 0 and retries > 0:  # 抖动重试，避免把活的节点误判成死的
-                time.sleep(0.2)
-                try:
-                    code, secs = probe(host, ip, min(3.0, timeout))
-                except Exception:
-                    code, secs = 0, 0.0
-            out.append(Probe(ip=ip, code=code, seconds=secs, source=src))
+
+    from concurrent.futures import wait  # 局部导入，避免顶部再改
+
+    pool = ThreadPoolExecutor(max_workers=max(1, min(workers, len(cands))))
+    futures = {pool.submit(probe, host, ip, timeout): (ip, src) for ip, src in cands}
+    deadline = timeout * 2 + 1.5
+    done, pending = wait(futures, timeout=deadline)
+
+    out: list[Probe] = []
+    retry_list: list[tuple[str, str]] = []
+    for fut in done:
+        ip, src = futures[fut]
+        try:
+            code, secs = fut.result()
+        except Exception:
+            code, secs = 0, 0.0
+        if code == 0 and retries > 0:
+            retry_list.append((ip, src))
+        out.append(Probe(ip=ip, code=code, seconds=secs, source=src))
+
+    # 超时未完成的直接判失败，不再等它们
+    for fut in pending:
+        ip, src = futures[fut]
+        out.append(Probe(ip=ip, code=0, seconds=0.0, source=src))
+    pool.shutdown(wait=False, cancel_futures=True)
+
+    # 对第一次失败的做一次快速重试（最多 3 个，避免拖慢）
+    for ip, src in retry_list[:3]:
+        code, secs = probe(host, ip, min(2.0, timeout))
+        for p in out:
+            if p.ip == ip and p.source == src:
+                p.code, p.seconds = code, secs
+                break
+
     out.sort(key=lambda p: (not p.ok, p.seconds))
     return out
 
