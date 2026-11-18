@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1 — 2026-11-18
 
 - hosts 标记块改为 `steam-node-doctor`，并兼容清理旧版本写入的标记
 - 备份文件名改为 `/etc/hosts.steam-node-doctor.bak`

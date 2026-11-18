@@ -42,7 +42,7 @@ DNS 查到的 IP  →  逐个实测（TCP + TLS 握手）  →  挑最快可达�
 ### 方式一：.deb（Debian / Ubuntu）
 
 ```bash
-sudo apt install ./steam-node-doctor_0.1.0_all.deb
+sudo apt install ./steam-node-doctor_0.1.1_all.deb
 ```
 
 安装后应用菜单出现「Steam 急救包」。
