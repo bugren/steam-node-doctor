@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 640px; overflow: hidden; }
+  body {
+    background: #0b0d12;
+    background-image:
+      radial-gradient(900px 520px at 12% -10%, rgba(88,166,255,.18), transparent 60%),
+      radial-gradient(700px 420px at 96% 110%, rgba(63,185,80,.12), transparent 60%);
+    color: #e6e9ef;
+    font-family: "Noto Sans CJK SC", "Noto Sans", sans-serif;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 64px 72px;
+  }
+  .left { width: 610px; }
+  .brand { display: flex; align-items: center; gap: 18px; margin-bottom: 24px; }
+  .logo {
+    width: 64px; height: 64px; border-radius: 16px; background: #12161f;
+    border: 1px solid #2a2f3a; display: flex; align-items: center; justify-content: center;
+  }
+  .brand h1 { font-size: 40px; font-weight: 700; letter-spacing: -.5px; }
+  .brand .ver { font-size: 15px; color: #8b93a7; font-weight: 400; margin-left: 10px; }
+  .tag { font-size: 27px; font-weight: 600; line-height: 1.35; margin-bottom: 10px; }
+  .tag em { color: #58a6ff; font-style: normal; }
+  .sub { font-size: 17px; color: #8b93a7; line-height: 1.6; margin-bottom: 24px; }
+  .points { display: flex; flex-direction: column; gap: 11px; }
+  .point { display: flex; align-items: center; gap: 12px; font-size: 17px; color: #c9d1d9; }
+  .dot { width: 22px; height: 22px; border-radius: 50%; background: rgba(63,185,80,.15);
+         color: #3fb950; display: flex; align-items: center; justify-content: center;
+         font-size: 13px; font-weight: 700; }
+  .term {
+    width: 480px; background: #0d1017; border: 1px solid #2a2f3a; border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.5); overflow: hidden;
+  }
+  .bar { height: 38px; background: #12161f; border-bottom: 1px solid #2a2f3a;
+         display: flex; align-items: center; gap: 8px; padding: 0 14px; }
+  .bar i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .bar i:nth-child(1) { background: #f85149; }
+  .bar i:nth-child(2) { background: #d29922; }
+  .bar i:nth-child(3) { background: #3fb950; }
+  .bar span { margin-left: 8px; font-size: 12px; color: #8b93a7;
+              font-family: "DejaVu Sans Mono", monospace; }
+  pre { padding: 20px 22px; font-family: "DejaVu Sans Mono", monospace;
+        font-size: 15px; line-height: 1.95; color: #c9d1d9; }
+  pre .cmd { color: #58a6ff; }
+  pre .ok { color: #3fb950; }
+  pre .dim { color: #6e7681; }
+  pre .res { color: #e6e9ef; font-weight: 700; }
+  .foot { position: absolute; left: 72px; bottom: 34px; font-size: 14px; color: #8b93a7;
+          font-family: "DejaVu Sans Mono", monospace; }
+  .foot b { color: #8b93a7; font-weight: 500; }
+</style>
+</head>
+<body>
+  <div class="left">
+    <div class="brand">
+      <div class="logo">
+        <svg width="40" height="40" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="17" fill="none" stroke="#58a6ff" stroke-width="5"/>
+          <circle cx="32" cy="32" r="6" fill="#58a6ff"/>
+          <path d="M32 9v8M32 47v8M9 32h8M47 32h8" stroke="#58a6ff" stroke-width="5" stroke-linecap="round"/>
+          <path d="M44 44l8 8" stroke="#3fb950" stroke-width="6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1>Steam Node Doctor<span class="ver">v0.1.0</span></h1>
+    </div>
+
+    <div class="tag">Steam 商店<em>打不开</em>？<br>先看看是哪个节点挂了。</div>
+    <div class="sub">Linux 上实测 CDN 节点，把能用的那个固定到 /etc/hosts。<br>诊断只读，修复前自动备份。</div>
+
+    <div class="points" style="margin-bottom:8px">
+      <div class="point"><span class="dot">✓</span>逐个节点真实握手，不信 DNS 的一面之词</div>
+      <div class="point"><span class="dot">✓</span>一键修复，改前备份、带标记可回滚</div>
+      <div class="point"><span class="dot">✓</span>整段被封时明确说“需要代理”，不硬改</div>
+    </div>
+
+    <div class="foot"><b>github.com/bugren/steam-node-doctor</b> · MIT · Ubuntu / Debian</div>
+  </div>
+
+  <div class="term">
+    <div class="bar"><i></i><i></i><i></i><span>steam-node-doctor diagnose</span></div>
+<pre><span class="cmd">$ steam-node-doctor diagnose</span>
+
+<span class="dim">[1/4] /etc/hosts</span>      <span class="ok">✔ 无劫持</span>
+<span class="dim">[2/4] 域名解析</span>       <span class="ok">✔ 104.83.198.104</span>
+<span class="dim">[3/4] 节点连通性</span>     <span class="ok">✔ 6/7 可达</span>
+<span class="dim">[4/4] 结论</span>           <span class="res">正常</span>
+
+<span class="dim">最快节点</span> <span class="ok">23.15.142.182 · 0.38s</span></pre>
+  </div>
+
+</body>
+</html>
