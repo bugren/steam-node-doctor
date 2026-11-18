@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=SteamFix
+Name[zh_CN]=Steam 急救包
+Comment=诊断并修复 Steam 商店打不开
+Exec=/home/yu/文档/deepseek-harness/default-workspace/steamfix/start.sh
+Icon=/home/yu/文档/deepseek-harness/default-workspace/steamfix/packaging/steamfix.svg
+Terminal=true
+Categories=Utility;Network;

@@ -256,7 +256,8 @@ def _strip_managed_block(text: str) -> str:
 
 def apply_fix(store_ip: str | None = None, community_ip: str | None = None) -> dict:
     """写入 hosts。需要 root。返回操作摘要。"""
-    if os.geteuid() != 0:
+    # 只有改真正的 /etc/hosts 才强制 root；测试用的副本允许直接写
+    if os.geteuid() != 0 and os.path.abspath(HOSTS_PATH) == "/etc/hosts":
         raise PermissionError("需要 root 权限才能修改 " + HOSTS_PATH)
 
     d = diagnose()
@@ -273,7 +274,7 @@ def apply_fix(store_ip: str | None = None, community_ip: str | None = None) -> d
 
     cleaned = "\n".join(
         line for line in _strip_managed_block(original).splitlines()
-        if not HIJACK_RE.match(line)
+        if not HIJACK_RE.match(line) and not PINNED_RE.match(line)
     ).rstrip("\n") + "\n"
 
     block = [MARK_BEGIN, f"{store_ip} {STORE}"]
@@ -282,7 +283,7 @@ def apply_fix(store_ip: str | None = None, community_ip: str | None = None) -> d
     block.append(MARK_END)
     new_text = cleaned + "\n".join(block) + "\n"
 
-    fd, tmp = tempfile.mkstemp(prefix="hosts.", dir="/etc")
+    fd, tmp = tempfile.mkstemp(prefix=".hosts.", dir=os.path.dirname(os.path.abspath(HOSTS_PATH)) or ".")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(new_text)

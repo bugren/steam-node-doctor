@@ -59,7 +59,8 @@ def cmd_diagnose(args: argparse.Namespace) -> int:
 
 def cmd_fix(args: argparse.Namespace) -> int:
     try:
-        res = engine.apply_fix()
+        res = engine.apply_fix(store_ip=getattr(args, "store_ip", None),
+                               community_ip=getattr(args, "community_ip", None))
     except PermissionError as e:
         print(f"✘ {e}", file=sys.stderr)
         print("  请用: sudo steamfix fix", file=sys.stderr)
@@ -113,6 +114,8 @@ def build_parser() -> argparse.ArgumentParser:
     d.set_defaults(func=cmd_diagnose)
 
     f = sub.add_parser("fix", help="修复（需要 root）")
+    f.add_argument("--store-ip", help="手动指定 store 节点（调试/演示用）")
+    f.add_argument("--community-ip", help="手动指定 community 节点")
     f.set_defaults(func=cmd_fix)
 
     w = sub.add_parser("watch", help="持续监控")
