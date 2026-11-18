@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "steamfix"
+version = "0.1.0"
+description = "Steam 网络诊断与修复：一键解决商店打不开、错误 -102/-118"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "SteamFix contributors" }]
+keywords = ["steam", "linux", "dns", "hosts", "network"]
+classifiers = [
+  "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Topic :: System :: Networking",
+]
+
+[project.scripts]
+steamfix = "steamfix.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["steamfix*"]
