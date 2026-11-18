@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-VERSION="$(python3 -c "import steamfix; print(steamfix.__version__)")"
+VERSION="$(python3 -c "import steam_node_doctor; print(steam_node_doctor.__version__)")"
 TAG="v${VERSION}"
 
 echo "==> 1/4 单元测试"
@@ -11,7 +11,7 @@ python3 -m unittest discover -s tests -q
 
 echo "==> 2/4 构建 .deb"
 bash packaging/build-deb.sh >/dev/null
-echo "    dist/steamfix_${VERSION}_all.deb"
+echo "    dist/steam-node-doctor_${VERSION}_all.deb"
 
 echo "==> 3/4 检查工作区"
 if [ -n "$(git status --porcelain)" ]; then

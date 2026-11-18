@@ -1,4 +1,4 @@
-"""SteamFix 命令行入口。"""
+"""Steam Node Doctor 命令行入口。"""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from . import engine
 
 
 def _print_diagnosis(d: engine.Diagnosis) -> None:
-    print(f"SteamFix {__version__} · Steam 连接诊断\n")
+    print(f"Steam Node Doctor {__version__} · Steam 连接诊断\n")
 
     print("[1/4] /etc/hosts")
     if d.hosts_hijack:
@@ -63,7 +63,7 @@ def cmd_fix(args: argparse.Namespace) -> int:
                                community_ip=getattr(args, "community_ip", None))
     except PermissionError as e:
         print(f"✘ {e}", file=sys.stderr)
-        print("  请用: sudo steamfix fix", file=sys.stderr)
+        print("  请用: sudo steam_node_doctor fix", file=sys.stderr)
         return 2
     except RuntimeError as e:
         print(f"✘ {e}", file=sys.stderr)
@@ -82,7 +82,7 @@ def cmd_watch(args: argparse.Namespace) -> int:
         try:
             d = engine.diagnose()
             if d.hosts_hijack:
-                print("[warn] 发现 hosts 劫持，需要 sudo steamfix fix")
+                print("[warn] 发现 hosts 劫持，需要 sudo steam_node_doctor fix")
             elif not d.best_store:
                 print(f"[{time.strftime('%H:%M:%S')}] 全部节点不可达，等待恢复")
             elif d.pinned_store == d.best_store:
@@ -105,8 +105,8 @@ def cmd_serve(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="steamfix", description="Steam 网络诊断与修复")
-    p.add_argument("--version", action="version", version=f"SteamFix {__version__}")
+    p = argparse.ArgumentParser(prog="steam_node_doctor", description="Steam 网络诊断与修复")
+    p.add_argument("--version", action="version", version=f"Steam Node Doctor {__version__}")
     sub = p.add_subparsers(dest="cmd")
 
     d = sub.add_parser("diagnose", help="诊断（只读）")

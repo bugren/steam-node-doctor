@@ -1,4 +1,4 @@
-"""SteamFix 核心引擎：诊断与修复 Steam 商店/社区连接问题。
+"""Steam Node Doctor 核心引擎：诊断与修复 Steam 商店/社区连接问题。
 
 设计原则：
 - 只依赖 Python 标准库
@@ -40,8 +40,8 @@ KNOWN_STORE_IPS = [
 # 用于多来源 DNS 交叉验证
 RESOLVERS = ["223.5.5.5", "119.29.29.29", "180.76.76.76", "1.1.1.1"]
 
-MARK_BEGIN = "# >>> steamfix managed >>>"
-MARK_END = "# <<< steamfix managed <<<"
+MARK_BEGIN = "# >>> steam_node_doctor managed >>>"
+MARK_END = "# <<< steam_node_doctor managed <<<"
 
 HIJACK_RE = re.compile(
     r"^\s*127\.0\.0\.1\s+.*(steampowered\.com|steamcommunity\.com|steamstatic\.com|eccdnx|akamaihd)",
@@ -153,7 +153,7 @@ def probe(host: str, ip: str, timeout: float = 3.0) -> tuple[int, float]:
             with ctx.wrap_socket(raw, server_hostname=host) as tls:
                 req = (
                     f"GET / HTTP/1.1\r\nHost: {host}\r\n"
-                    "User-Agent: steamfix/0.1\r\nConnection: close\r\n\r\n"
+                    "User-Agent: steam_node_doctor/0.1\r\nConnection: close\r\n\r\n"
                 )
                 tls.sendall(req.encode())
                 head = tls.recv(64)
@@ -316,15 +316,17 @@ def apply_fix(store_ip: str | None = None, community_ip: str | None = None) -> d
     if os.geteuid() != 0 and os.path.abspath(HOSTS_PATH) == "/etc/hosts":
         raise PermissionError("需要 root 权限才能修改 " + HOSTS_PATH)
 
-    d = diagnose()
-    store_ip = store_ip or d.best_store
-    community_ip = community_ip or d.best_community
+    # 只有没指定 store 节点时才需要联网探测
+    if not store_ip:
+        d = diagnose()
+        store_ip = d.best_store
+        community_ip = community_ip or d.best_community
     if not store_ip:
         raise RuntimeError("没有找到可达的 store 节点，拒绝写入无效 IP")
 
     before_hijack = len(scan_hosts())
     original = _read_hosts()
-    backup = HOSTS_PATH + ".steamfix.bak"
+    backup = HOSTS_PATH + ".steam_node_doctor.bak"
     if not os.path.exists(backup):
         shutil.copy2(HOSTS_PATH, backup)
 

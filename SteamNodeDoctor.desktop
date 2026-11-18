@@ -1,9 +1,9 @@
 [Desktop Entry]
 Type=Application
-Name=SteamFix
+Name=Steam Node Doctor
 Name[zh_CN]=Steam 急救包
 Comment=诊断并修复 Steam 商店打不开
 Exec=sh -c 'cd "$(dirname "$1")" && exec ./start.sh' _ %k
-Icon=steamfix
+Icon=steam-node-doctor
 Terminal=true
 Categories=Utility;Network;

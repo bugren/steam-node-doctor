@@ -1,12 +1,12 @@
 [Desktop Entry]
 Type=Application
-Name=SteamFix
+Name=Steam Node Doctor
 Name[zh_CN]=Steam 急救包
 GenericName=Steam Network Fixer
 Comment=Diagnose and fix Steam store connection problems
 Comment[zh_CN]=诊断并修复 Steam 商店打不开、错误 -102/-118
-Exec=steamfix serve --open
-Icon=steamfix
+Exec=steam-node-doctor serve --open
+Icon=steam-node-doctor
 Terminal=false
 Categories=Utility;Network;
 Keywords=steam;network;dns;hosts;

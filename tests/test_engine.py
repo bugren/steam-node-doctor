@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from steamfix import engine
+from steam_node_doctor import engine
 
 
 class HostsTests(unittest.TestCase):
@@ -25,7 +25,7 @@ class HostsTests(unittest.TestCase):
 
     def tearDown(self):
         self.patch.stop()
-        for suffix in ("", ".steamfix.bak"):
+        for suffix in ("", ".steam_node_doctor.bak"):
             try:
                 os.unlink(self.hosts + suffix)
             except OSError:
@@ -59,7 +59,7 @@ class HostsTests(unittest.TestCase):
         # 无关行保留
         self.assertIn("example.com 1.2.3.4", text)
         # 备份存在
-        self.assertTrue(os.path.exists(self.hosts + ".steamfix.bak"))
+        self.assertTrue(os.path.exists(self.hosts + ".steam_node_doctor.bak"))
 
     def test_apply_fix_is_idempotent(self):
         engine.apply_fix(store_ip="23.15.142.182")

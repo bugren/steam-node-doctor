@@ -9,14 +9,14 @@ help:
 	@echo "make clean     清理构建产物"
 
 run:
-	python3 -m steamfix serve --open
+	python3 -m steam_node_doctor serve --open
 
 diagnose:
-	python3 -m steamfix diagnose
+	python3 -m steam_node_doctor diagnose
 
 test:
-	python3 -m compileall -q steamfix
-	python3 -m steamfix --version
+	python3 -m compileall -q steam-node-doctor
+	python3 -m steam_node_doctor --version
 	@echo "OK"
 
 deb:

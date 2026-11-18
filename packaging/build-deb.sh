@@ -6,8 +6,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-VERSION="$(python3 -c "import sys; sys.path.insert(0, '$ROOT'); import steamfix; print(steamfix.__version__)")"
-PKG="steamfix"
+VERSION="$(python3 -c "import sys; sys.path.insert(0, '$ROOT'); import steam_node_doctor; print(steam_node_doctor.__version__)")"
+PKG="steam-node-doctor"
 ARCH="all"
 OUT="$ROOT/dist"
 STAGE="$(mktemp -d)"
@@ -15,27 +15,27 @@ trap 'rm -rf "$STAGE"' EXIT
 
 DEST="$STAGE/${PKG}_${VERSION}_${ARCH}"
 mkdir -p "$DEST/DEBIAN" \
-         "$DEST/usr/lib/steamfix" \
+         "$DEST/usr/lib/steam-node-doctor" \
          "$DEST/usr/bin" \
          "$DEST/usr/share/applications" \
          "$DEST/usr/share/icons/hicolor/scalable/apps" \
-         "$DEST/usr/share/doc/steamfix"
+         "$DEST/usr/share/doc/steam-node-doctor"
 
 echo "==> 复制代码"
-cp -r "$ROOT/steamfix" "$DEST/usr/lib/steamfix/"
-find "$DEST/usr/lib/steamfix" -name '__pycache__' -type d -prune -exec rm -rf {} +
-cp "$ROOT/README.md" "$ROOT/LICENSE" "$DEST/usr/share/doc/steamfix/"
+cp -r "$ROOT/steam_node_doctor" "$DEST/usr/lib/steam-node-doctor/"
+find "$DEST/usr/lib/steam-node-doctor" -name '__pycache__' -type d -prune -exec rm -rf {} +
+cp "$ROOT/README.md" "$ROOT/LICENSE" "$DEST/usr/share/doc/steam-node-doctor/"
 
 echo "==> 生成启动器"
-cat > "$DEST/usr/bin/steamfix" <<'WRAP'
+cat > "$DEST/usr/bin/steam-node-doctor" <<'WRAP'
 #!/bin/sh
-export PYTHONPATH="/usr/lib/steamfix${PYTHONPATH:+:$PYTHONPATH}"
-exec python3 -m steamfix "$@"
+export PYTHONPATH="/usr/lib/steam-node-doctor${PYTHONPATH:+:$PYTHONPATH}"
+exec python3 -m steam_node_doctor "$@"
 WRAP
-chmod 0755 "$DEST/usr/bin/steamfix"
+chmod 0755 "$DEST/usr/bin/steam-node-doctor"
 
-cp "$ROOT/packaging/steamfix.desktop" "$DEST/usr/share/applications/"
-cp "$ROOT/packaging/steamfix.svg" "$DEST/usr/share/icons/hicolor/scalable/apps/steamfix.svg"
+cp "$ROOT/packaging/steam-node-doctor.desktop" "$DEST/usr/share/applications/"
+cp "$ROOT/packaging/steam-node-doctor.svg" "$DEST/usr/share/icons/hicolor/scalable/apps/steam-node-doctor.svg"
 
 echo "==> 写控制文件"
 INSTALLED_SIZE="$(du -sk "$DEST/usr" | cut -f1)"
@@ -46,7 +46,7 @@ Section: utils
 Priority: optional
 Architecture: ${ARCH}
 Installed-Size: ${INSTALLED_SIZE}
-Maintainer: SteamFix contributors <noreply@example.com>
+Maintainer: Steam Node Doctor contributors <noreply@example.com>
 Depends: python3 (>= 3.9)
 Recommends: dnsutils
 Description: Steam network diagnostic and repair tool
@@ -69,7 +69,7 @@ chmod 0755 "$DEST/DEBIAN/postinst"
 echo "==> 修正权限"
 find "$DEST/usr" -type d -exec chmod 0755 {} +
 find "$DEST/usr" -type f -exec chmod 0644 {} +
-chmod 0755 "$DEST/usr/bin/steamfix"
+chmod 0755 "$DEST/usr/bin/steam-node-doctor"
 chmod 0755 "$DEST/DEBIAN/postinst"
 
 mkdir -p "$OUT"

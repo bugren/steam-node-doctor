@@ -1,4 +1,4 @@
-# SteamFix · Steam 网络急救包
+# Steam Node Doctor · Steam 网络急救包
 
 Linux 上 Steam 商店打不开、报错 **-102 / -118**、商店页一直转圈时，用来快速定位并修复的小工具。
 
@@ -38,7 +38,7 @@ DNS 查到的 IP  →  逐个实测（TCP + TLS 握手）  →  挑最快可达�
 ### 方式一：.deb（Debian / Ubuntu）
 
 ```bash
-sudo apt install ./steamfix_0.1.0_all.deb
+sudo apt install ./steam-node-doctor_0.1.0_all.deb
 ```
 
 安装后应用菜单出现「Steam 急救包」。
@@ -46,11 +46,11 @@ sudo apt install ./steamfix_0.1.0_all.deb
 ### 方式二：源码
 
 ```bash
-git clone <你的仓库地址> steamfix
-cd steamfix
+git clone <你的仓库地址> steam-node-doctor
+cd steam-node-doctor
 sudo bash install.sh     # 装到 /usr/local
 # 或者不安装，直接运行：
-python3 -m steamfix serve --open
+python3 -m steam-node-doctor serve --open
 ```
 
 ## 使用
@@ -58,7 +58,7 @@ python3 -m steamfix serve --open
 ### 图形界面
 
 ```bash
-steamfix serve --open
+steam-node-doctor serve --open
 ```
 
 浏览器打开后：
@@ -70,18 +70,18 @@ steamfix serve --open
 ### 命令行
 
 ```bash
-steamfix diagnose            # 诊断，只读
-steamfix diagnose --json     # 机器可读
-sudo steamfix fix            # 修复
-steamfix watch               # 每 10 分钟检查一次
-sudo steamfix watch --apply  # 自动修复
+steam-node-doctor diagnose            # 诊断，只读
+steam-node-doctor diagnose --json     # 机器可读
+sudo steam-node-doctor fix            # 修复
+steam-node-doctor watch               # 每 10 分钟检查一次
+sudo steam-node-doctor watch --apply  # 自动修复
 ```
 
 ## 安全说明
 
 - 只修改本机 `/etc/hosts`，不改 Steam 客户端文件
-- 首次修复生成备份 `/etc/hosts.steamfix.bak`
-- 写入内容带 `# >>> steamfix managed >>>` 标记，可手动整段删除
+- 首次修复生成备份 `/etc/hosts.steam-node-doctor.bak`
+- 写入内容带 `# >>> steam-node-doctor managed >>>` 标记，可手动整段删除
 - 诊断模式完全只读，不需要 root
 - 修复需要 root，桌面环境下通过 `pkexec` 弹密码框
 
@@ -96,15 +96,15 @@ sudo steamfix watch --apply  # 自动修复
 
 ```bash
 python3 -m unittest discover -s tests -v   # 单元测试
-python3 -m compileall steamfix             # 语法检查
+python3 -m compileall steam-node-doctor             # 语法检查
 bash packaging/build-deb.sh                # 构建 .deb
 ```
 
 目录：
 
 ```text
-steamfix/
-├── steamfix/
+steam-node-doctor/
+├── steam-node-doctor/
 │   ├── engine.py    # 核心：解析、探测、选节点、写 hosts
 │   ├── cli.py       # 命令行
 │   └── web.py       # 本地网页界面

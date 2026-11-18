@@ -7,7 +7,7 @@
 ### 功能
 - 诊断：hosts 劫持检测、系统解析、多 DNS 交叉验证、节点实测（TCP + TLS）
 - 修复：自动挑选最快可达节点写入 `/etc/hosts`，带标记块、自动备份、幂等
-- 界面：本地网页（`steamfix serve`），一键修复走 `pkexec` 提权
+- 界面：本地网页（`steam-node-doctor serve`），一键修复走 `pkexec` 提权
 - 命令行：`diagnose` / `fix` / `watch` / `serve`
 - 打包：`.deb`、`install.sh`、GitHub Actions 自动发版
 

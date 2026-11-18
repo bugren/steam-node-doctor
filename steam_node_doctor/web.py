@@ -21,7 +21,7 @@ _INDEX = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SteamFix · Steam 网络急救包</title>
+<title>Steam Node Doctor · Steam 网络急救包</title>
 <style>
   :root { --bg:#0f1115; --card:#181b22; --line:#2a2f3a; --text:#e6e9ef;
           --dim:#8b93a7; --ok:#3fb950; --warn:#d29922; --err:#f85149; --accent:#58a6ff; }
@@ -51,7 +51,7 @@ _INDEX = """<!doctype html>
 </head>
 <body>
 <div class="wrap">
-  <h1>SteamFix</h1>
+  <h1>Steam Node Doctor</h1>
   <div class="sub">Steam 网络急救包 · v__VERSION__ · 诊断只读，修复前自动备份</div>
 
   <div class="card">
@@ -76,7 +76,7 @@ _INDEX = """<!doctype html>
   </div>
 
   <div class="foot">
-    修复会修改 <code>/etc/hosts</code> 并自动备份为 <code>/etc/hosts.steamfix.bak</code>。
+    修复会修改 <code>/etc/hosts</code> 并自动备份为 <code>/etc/hosts.steam_node_doctor.bak</code>。
     社区域名若整段被封，仅靠 hosts 无法解决，需要代理。
   </div>
 </div>
@@ -146,16 +146,16 @@ def _run_fix_privileged() -> tuple[bool, str]:
 
     pkexec = shutil.which("pkexec")
     if not pkexec:
-        return False, "未找到 pkexec，请在终端执行 sudo steamfix fix"
+        return False, "未找到 pkexec，请在终端执行 sudo steam_node_doctor fix"
 
     # 优先用安装后的启动器；源码运行时退回「显式带 PYTHONPATH 的 pkexec env」
-    exe = shutil.which("steamfix")
+    exe = shutil.which("steam_node_doctor")
     pkg_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     if exe:
         cmd = [pkexec, exe, "fix"]
     else:
         cmd = [pkexec, "env", f"PYTHONPATH={pkg_root}",
-               sys.executable, "-m", "steamfix", "fix"]
+               sys.executable, "-m", "steam_node_doctor", "fix"]
 
     try:
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
@@ -170,7 +170,7 @@ def _run_fix_privileged() -> tuple[bool, str]:
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "SteamFix/" + __version__
+    server_version = "Steam Node Doctor/" + __version__
 
     def log_message(self, fmt, *args):  # 安静一点
         pass
@@ -215,7 +215,7 @@ def serve(port: int = 8765, open_browser: bool = False) -> int:
         return 1
 
     url = f"http://127.0.0.1:{port}/"
-    print(f"SteamFix 已启动：{url}")
+    print(f"Steam Node Doctor 已启动：{url}")
     print("按 Ctrl+C 停止")
     if open_browser:
         threading.Timer(0.4, lambda: webbrowser.open(url)).start()

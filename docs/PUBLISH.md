@@ -5,7 +5,7 @@
 
 ## 0. 先确认没有重名
 
-GitHub 上叫 `SteamFix` 的仓库有 200 多个，建议用更具体的名字：
+GitHub 上叫 `Steam Node Doctor` 的仓库有 200 多个，建议用更具体的名字：
 
 - `steam-node-doctor`（推荐，描述准确）
 - `steam-host-fix`
@@ -44,7 +44,7 @@ git push origin v0.1.0
 
 `.github/workflows/release.yml` 会自动：
 
-1. 构建 `steamfix_0.1.0_all.deb`
+1. 构建 `steam-node-doctor_0.1.0_all.deb`
 2. 创建 Release 并附上 `.deb` 和 `install.sh`
 
 ## 4. 首次发布前检查清单
@@ -54,7 +54,7 @@ git push origin v0.1.0
 - [ ] `README.md` 里的 `<你的仓库地址>` 已替换
 - [ ] 没有提交个人路径、邮箱、token
 - [ ] LICENSE 年份/署名确认
-- [ ] 试装一次：`sudo apt install ./dist/steamfix_0.1.0_all.deb`
+- [ ] 试装一次：`sudo apt install ./dist/steam-node-doctor_0.1.0_all.deb`
 
 ## 5. 常见问题
 
