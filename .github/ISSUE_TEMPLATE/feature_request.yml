@@ -1,0 +1,18 @@
+name: 功能建议
+description: 希望支持的新场景或改进
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 你遇到的具体场景
+      description: 越具体越好，比如某发行版、某种网络环境
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 你希望的解决方式
+    validations:
+      required: false

@@ -40,8 +40,8 @@ KNOWN_STORE_IPS = [
 # 用于多来源 DNS 交叉验证
 RESOLVERS = ["223.5.5.5", "119.29.29.29", "180.76.76.76", "1.1.1.1"]
 
-MARK_BEGIN = "# >>> steam_node_doctor managed >>>"
-MARK_END = "# <<< steam_node_doctor managed <<<"
+MARK_BEGIN = "# >>> steam-node-doctor managed >>>"
+MARK_END = "# <<< steam-node-doctor managed <<<"
 
 HIJACK_RE = re.compile(
     r"^\s*127\.0\.0\.1\s+.*(steampowered\.com|steamcommunity\.com|steamstatic\.com|eccdnx|akamaihd)",
@@ -299,10 +299,12 @@ def _strip_managed_block(text: str) -> str:
     lines = text.splitlines()
     out, skipping = [], False
     for line in lines:
-        if line.strip() == MARK_BEGIN:
+        stripped = line.strip()
+        # 兼容历史版本的标记（steamfix / steam_node_doctor / steam-node-doctor）
+        if stripped.startswith("# >>> steam") and stripped.endswith("managed >>>"):
             skipping = True
             continue
-        if line.strip() == MARK_END:
+        if stripped.startswith("# <<< steam") and stripped.endswith("managed <<<"):
             skipping = False
             continue
         if not skipping:

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- hosts 标记块改为 `steam-node-doctor`，并兼容清理旧版本写入的标记
+- 备份文件名改为 `/etc/hosts.steam-node-doctor.bak`
+- 端口 8765 被占用时自动向后寻找可用端口
+- 版本号改为单一来源（`pyproject.toml` 从包读取）
+- 新增：卸载说明、常见问题、Issue 模板、CONTRIBUTING
+
 ## 0.1.0 — 2026-11-18
 
 首个可用版本。

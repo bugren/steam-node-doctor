@@ -208,10 +208,16 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def serve(port: int = 8765, open_browser: bool = False) -> int:
-    try:
-        httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    except OSError as e:
-        print(f"端口 {port} 不可用：{e}", file=sys.stderr)
+    httpd = None
+    for candidate in range(port, port + 10):
+        try:
+            httpd = ThreadingHTTPServer(("127.0.0.1", candidate), Handler)
+            port = candidate
+            break
+        except OSError:
+            continue
+    if httpd is None:
+        print(f"端口 {port}-{port + 9} 都被占用，请用 --port 指定其他端口", file=sys.stderr)
         return 1
 
     url = f"http://127.0.0.1:{port}/"
