@@ -141,7 +141,7 @@ def dig_ips(host: str, resolvers: list[str] | None = None) -> list[str]:
     return sorted(found)
 
 
-def probe(host: str, ip: str, timeout: float = 6.0) -> tuple[int, float]:
+def probe(host: str, ip: str, timeout: float = 3.0) -> tuple[int, float]:
     """直连 IP、带正确 SNI/Host 做一次 HTTPS 请求，返回 (状态码, 首字节秒数)。"""
     ctx = ssl.create_default_context()
     started = time.monotonic()
@@ -173,11 +173,14 @@ def candidates_for(host: str) -> list[tuple[str, str]]:
     return [(ip, src) for ip, src in seen.items()]
 
 
-def probe_all(host: str, timeout: float = 6.0) -> list[Probe]:
+def probe_all(host: str, timeout: float = 3.0, retries: int = 1,
+              limit: int | None = None, workers: int = 5) -> list[Probe]:
     cands = candidates_for(host)
+    if limit:
+        cands = cands[:limit]
     if not cands:
         return []
-    with ThreadPoolExecutor(max_workers=min(8, len(cands))) as pool:
+    with ThreadPoolExecutor(max_workers=max(1, min(workers, len(cands)))) as pool:
         futures = {
             pool.submit(probe, host, ip, timeout): (ip, src)
             for ip, src in cands
@@ -189,10 +192,10 @@ def probe_all(host: str, timeout: float = 6.0) -> list[Probe]:
                 code, secs = fut.result()
             except Exception:
                 code, secs = 0, 0.0
-            if code == 0:  # 抖动重试一次，避免把活的节点误判成死的
-                time.sleep(0.3)
+            if code == 0 and retries > 0:  # 抖动重试，避免把活的节点误判成死的
+                time.sleep(0.2)
                 try:
-                    code, secs = probe(host, ip, timeout)
+                    code, secs = probe(host, ip, min(3.0, timeout))
                 except Exception:
                     code, secs = 0, 0.0
             out.append(Probe(ip=ip, code=code, seconds=secs, source=src))
@@ -206,8 +209,29 @@ def best_of(probes: list[Probe]) -> str:
 
 
 def diagnose() -> Diagnosis:
-    store_probes = probe_all(STORE)
-    comm_probes = probe_all(COMMUNITY)
+    pinned_store, pinned_comm = pinned_ips()
+
+    # 快路径：固定的 IP 还活着，1 秒内给出结论，不必全量探测
+    if pinned_store and not scan_hosts():
+        code, secs = probe(STORE, pinned_store, timeout=3.0)
+        if code:
+            store_probes = [Probe(ip=pinned_store, code=code, seconds=secs, source="pinned")]
+            comm_probes = []
+            d = Diagnosis(
+                hosts_hijack=[], hosts_writable=hosts_writable(),
+                pinned_store=pinned_store, pinned_community=pinned_comm,
+                system_store_ips=system_ips(STORE),
+                store_probes=store_probes, community_probes=comm_probes,
+                best_store=pinned_store, best_community="",
+                store_reachable=True, community_reachable=False,
+                verdict="正常",
+                hints=[f"当前固定的 {pinned_store} 可用（快速检查）"],
+            )
+            return d
+
+    store_probes = probe_all(STORE, timeout=2.5, retries=1, limit=6, workers=6)
+    # 社区常年整段被封，只抽 3 个探一下，避免拖慢整个诊断
+    comm_probes = probe_all(COMMUNITY, timeout=2.0, retries=0, limit=2, workers=2)
     pinned_store, pinned_comm = pinned_ips()
 
     d = Diagnosis(
