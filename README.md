@@ -1,60 +1,55 @@
 # SteamFix · Steam 网络急救包
 
-诊断并修复 Linux 上 Steam 商店打不开、报错 **-102 / -118**、商店页面一直转圈的问题。
+Linux 上 Steam 商店打不开、报错 **-102 / -118**、商店页一直转圈时，用来快速定位并修复的小工具。
 
-> 一句话原理：Steam 商店走的是 Akamai/Fastly 的 CDN 节点，某些网络会把部分节点整段拦掉；
-> 而 DNS 往往只给你**一个已经失效的 IP**。SteamFix 会实测所有候选节点，把可用的那个写进
-> `/etc/hosts`，改前自动备份、改后可回滚。
+> **适用范围先说清楚**：它解决的是「DNS 给了一个失效的 CDN 节点」这一类问题。
+> 如果整个 IP 段被封，它不会硬改，会明确告诉你需要代理。
+> 社群（创意工坊、个人资料）常年不可直连，本工具不处理。
+
+## 它怎么工作
+
+```text
+DNS 查到的 IP  →  逐个实测（TCP + TLS 握手）  →  挑最快可达的  →  写进 /etc/hosts
+```
+
+`/etc/hosts` 的优先级高于 DNS，所以写进去之后就固定走那个节点。
+修复前自动备份，写入的内容带标记块，卸载时可以直接删掉。
 
 ## 功能
 
-- **诊断**：检查 `/etc/hosts` 劫持、系统解析结果、逐个节点实测（TCP + TLS 握手），给出结论
-- **修复**：自动挑选最快的可达节点并写入 hosts，操作前备份
-- **网页界面**：本地起一个页面，点按钮就行，不用记命令
-- **命令行**：适合脚本化和远程使用
+- **诊断**（只读）：hosts 劫持、系统解析、多 DNS 交叉验证、逐个节点实测
+- **修复**：自动挑最快节点写入 hosts，备份 + 标记块 + 幂等（重复修复不会累积）
+- **网页界面**：本地起一个页面，点按钮就行
+- **命令行**：`diagnose` / `fix` / `watch` / `serve`
 - **零第三方依赖**：只用 Python 标准库
 
-## 界面
+## 适用 / 不适用
 
-浏览器打开 `http://127.0.0.1:8765`，看到的是：
-
-```text
-┌────────────────────────────────────────────┐
-│ SteamFix                                   │
-│ Steam 网络急救包 · v0.1.0                    │
-├────────────────────────────────────────────┤
-│ 结论          节点已失效                     │
-│ hosts 劫持    无                            │
-│ 系统解析      104.83.198.104                │
-│ 最快节点      23.15.142.182                 │
-│ 当前固定      104.83.198.104                │
-├────────────────────────────────────────────┤
-│ [重新检查]  [一键修复]                       │
-└────────────────────────────────────────────┘
-```
+| 情况 | 表现 | 能不能治 |
+|---|---|---|
+| `/etc/hosts` 被改、Steam 域名指向 127.0.0.1 | 报错 -102 | ✅ 能 |
+| DNS 返回失效 IP，但其他节点可达 | 商店白屏、转圈 | ✅ 能 |
+| 节点轮换导致昨天能用今天失效 | 时好时坏 | ✅ 能（重新修复） |
+| 整个 IP 段被运营商封锁 | 全部节点不可达 | ⚠️ 不能，需要代理 |
+| 社群 / 创意工坊 | 打不开 | ❌ 不能，需要代理 |
 
 ## 安装
 
 ### 方式一：.deb（Debian / Ubuntu）
 
 ```bash
-wget https://example.com/steamfix_0.1.0_all.deb
 sudo apt install ./steamfix_0.1.0_all.deb
 ```
 
-安装后应用菜单里会出现「Steam 急救包」。
+安装后应用菜单出现「Steam 急救包」。
 
-### 方式二：从源码（任意发行版）
+### 方式二：源码
 
 ```bash
-git clone https://example.com/steamfix.git
+git clone <你的仓库地址> steamfix
 cd steamfix
-sudo bash install.sh
-```
-
-### 方式三：不安装，直接跑
-
-```bash
+sudo bash install.sh     # 装到 /usr/local
+# 或者不安装，直接运行：
 python3 -m steamfix serve --open
 ```
 
@@ -66,67 +61,66 @@ python3 -m steamfix serve --open
 steamfix serve --open
 ```
 
-浏览器会自动打开，点「重新检查」看诊断结果，点「一键修复」写入 hosts（会弹出系统密码框）。
+浏览器打开后：
+
+1. 点「重新检查」看诊断结果
+2. 结论为「节点已失效」时点「一键修复」（会弹系统密码框）
+3. 完全退出 Steam 后重新打开
 
 ### 命令行
 
 ```bash
-steamfix diagnose          # 诊断，只读，不修改任何东西
-steamfix diagnose --json   # 机器可读输出
-sudo steamfix fix          # 修复：备份 hosts + 固定最快节点
-steamfix watch             # 每 10 分钟检查一次
-sudo steamfix watch --apply  # 自动修复模式
+steamfix diagnose            # 诊断，只读
+steamfix diagnose --json     # 机器可读
+sudo steamfix fix            # 修复
+steamfix watch               # 每 10 分钟检查一次
+sudo steamfix watch --apply  # 自动修复
 ```
 
-## 它到底改了什么
+## 安全说明
 
-修复时只会往 `/etc/hosts` 写入一段带标记的区块：
+- 只修改本机 `/etc/hosts`，不改 Steam 客户端文件
+- 首次修复生成备份 `/etc/hosts.steamfix.bak`
+- 写入内容带 `# >>> steamfix managed >>>` 标记，可手动整段删除
+- 诊断模式完全只读，不需要 root
+- 修复需要 root，桌面环境下通过 `pkexec` 弹密码框
 
-```text
-# >>> steamfix managed >>>
-23.15.142.182 store.steampowered.com
-# <<< steamfix managed <<<
-```
+## 已知限制
 
-- 首次修复会生成备份 `/etc/hosts.steamfix.bak`
-- 重复修复会替换整个区块，不会越积越多
-- 卸载后这段标记也可以手动删掉
-
-## 已知限制（请一定看）
-
-1. **社区域名（steamcommunity.com）不保证可用**。它常年被整段封锁，换 IP 也没用，需要代理。
-   这不影响 Steam 登录、游戏库和游戏下载。
-2. **节点 IP 会轮换**。Akamai 会回收节点，用着用着可能又失效，重新点一次「修复」即可；
-   或者用 `watch` 让它自动换。
-3. **整段网络封锁时无解**。如果所有候选节点都不可达，说明是网络层封锁，工具不会硬写无效 IP，
-   会明确告诉你「需要代理」。
-4. **需要 root 才能改 hosts**。诊断不需要，修复会通过 `pkexec` 弹窗提权。
+1. **社区域名不保证可用**：`steamcommunity.com` 常年被整段封锁，换 IP 无效。不影响登录、游戏库和下载。
+2. **节点 IP 会轮换**：Akamai 回收节点后需要重新修复，或启用 `watch`。
+3. **只支持 Linux**：Windows 版未实现。
+4. **仅在 Ubuntu 24.04 + X11 上实测过**，其他发行版理论上可用但未验证。
 
 ## 开发
 
 ```bash
-python3 -m steamfix diagnose     # 冒烟测试
-python3 -m compileall steamfix   # 语法检查
-bash packaging/build-deb.sh      # 构建 .deb（输出到 dist/）
+python3 -m unittest discover -s tests -v   # 单元测试
+python3 -m compileall steamfix             # 语法检查
+bash packaging/build-deb.sh                # 构建 .deb
 ```
 
-目录结构：
+目录：
 
-```
+```text
 steamfix/
 ├── steamfix/
-│   ├── engine.py    # 核心：解析、探测、选节点、改 hosts
+│   ├── engine.py    # 核心：解析、探测、选节点、写 hosts
 │   ├── cli.py       # 命令行
-│   ├── web.py       # 本地网页界面
-│   └── __main__.py
-├── packaging/       # .deb 构建、桌面图标
-└── install.sh       # 源码安装脚本
+│   └── web.py       # 本地网页界面
+├── tests/           # 单元测试（不联网）
+├── packaging/       # .deb 构建、桌面入口、图标
+└── install.sh
 ```
 
-## 免责声明
+## 发布新版本
 
-本工具只修改本机 `/etc/hosts`，不修改 Steam 客户端文件，不绕过任何付费或 DRM。
-它解决的是「域名解析到失效节点」这类网络问题，对「内容本身无法访问」无能为力。
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+GitHub Actions 会自动构建 `.deb` 并创建 Release。
 
 ## License
 
